@@ -90,15 +90,13 @@ end
 
 def get_size_for_path(file_tree, path)
   dir = file_tree.dig(*path)
-  size = dir[:files]
+  size = dir[:files] || 0 # It can be nil if there are no files, so replace that with 0.
 
   # Bail if this dir has no further subdirs.
   return size if dir.except(:files).keys.empty?
 
   # Recursively add to the size of the dir
   dir.except(:files).keys.each do |key|
-    # puts "size: #{size}"
-    # puts "get_size_for_path: #{get_size_for_path(file_tree, path.dup.push(key))}"
     size += get_size_for_path(file_tree, path.dup.push(key))
   end
 
