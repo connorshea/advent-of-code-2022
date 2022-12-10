@@ -1,50 +1,33 @@
 require 'debug'
 
-lines = File.readlines('day7input.txt')
-# lines = File.readlines('day7testinput.txt')
-# Yeet the linebreaks.
-lines.map!(&:strip)
-
-def command?(string)
-  string.start_with?('$')
-end
-
-tree = {}
-current_dir = []
-
-# Iterate through the lines
-lines.each do |line|
-  if command?(line)
-    if line == '$ ls'
-      next
-    elsif line.start_with?('$ cd')
-      # Cursed but it works
-      target_dir = line.split('$ cd')[1].strip
-
-      if current_dir.empty? && tree.keys.empty?
-        tree = { target_dir => {} }
-        current_dir << target_dir
-        next
-      end
-
-      # Go up a directory.
-      if target_dir == '..'
-        current_dir.pop
-      else
-        current_dir[0..-2].inject(tree, :fetch)[current_dir.last] = current_dir[0..-2].inject(tree, :fetch)[current_dir.last].merge({ target_dir => {} })
-        current_dir << target_dir
-      end
-    end
-  else
-    if line.start_with?('dir')
-      next
-    else
-      size, filename = line.split(' ')
-      current_dir[0..-2].inject(tree, :fetch)[current_dir.last][:files] = [] unless current_dir[0..-2].inject(tree, :fetch)[current_dir.last].key?(:files)
-      current_dir[0..-2].inject(tree, :fetch)[current_dir.last][:files] << { filename: filename, size: size.to_i }
-    end
-  end
-end
+tree = {
+  "/" => {
+    :files => [
+      {:filename => "b.txt", :size => 14848514},
+      {:filename => "c.dat", :size => 8504156}
+    ],
+    "a" => {
+      :files => [
+        {:filename => "f", :size => 29116},
+        {:filename => "g", :size => 2557},
+        {:filename => "h.lst", :size => 62596}
+      ],
+      "e" => {
+        :files => [
+          {:filename => "i", :size => 584}
+        ]
+      }
+    },
+    "d" => {
+      :files => [
+        {:filename => "j", :size => 4060174},
+        {:filename => "d.log", :size => 8033020},
+        {:filename => "d.ext", :size => 5626152},
+        {:filename => "k", :size => 7214296}
+      ]
+    }
+  }
+}
 
 # Given a tree of files, calculate the sizes for each dir based on its direct descendant files.
 def map_sizes_for_dirs(file_tree)
@@ -86,7 +69,7 @@ end
 
 def get_size_for_path(file_tree, path)
   dir = file_tree.dig(*path)
-  size = dir[:files] || 0 # It can be nil if there are no files, so replace that with 0.
+  size = dir[:files]
 
   # Bail if this dir has no further subdirs.
   return size if dir.except(:files).keys.empty?
@@ -118,9 +101,3 @@ dir_sizes = get_sizes_including_subdirs(tree)
 
 puts "Part 1 answer: #{dir_sizes.values.filter { |size| size <= 100000 }.sum }"
 
-total_disk_space = 70000000
-unused_disk_space = total_disk_space - dir_sizes['/']
-update_size = 30000000
-minimum_size_to_delete = update_size - unused_disk_space
-
-puts "Part 2 answer: #{dir_sizes.values.filter { |size| size >= minimum_size_to_delete }.min }"
