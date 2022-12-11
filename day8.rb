@@ -72,3 +72,13 @@ end
 grid = Grid.new(lines)
 
 puts grid.inspect
+
+# Go through every cell in the grid and determine if the given cell is visible.
+grid.rows.each_with_index do |row, y|
+  row.each_with_index do |cell, x|
+    puts "[#{x}, #{y}]: #{cell}"
+    next if grid.cell_on_outside_perimeter?(x, y)
+
+    
+  end
+end
