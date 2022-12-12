@@ -100,3 +100,49 @@ grid.rows.each_with_index do |row, y|
 end
 
 puts "Part 1: #{cells_visible_from_outside}"
+
+scenic_scores = []
+
+# Go through every cell in the grid and determine if the given cell is visible.
+grid.rows.each_with_index do |row, y|
+  row.each_with_index do |cell, x|
+    # If a grid cell is on the perimeter, at least one of the values for an
+    # adjacent tree will be 0. This makes the scenic score for this tree 0,
+    # no matter what.
+    if grid.cell_on_outside_perimeter?(x, y)
+      scenic_scores << 0
+      next
+    end
+
+    adjacent_trees = {
+      left: grid.row(y)[0...x],
+      right: grid.row(y)[x+1..],
+      up: grid.column(x)[0...y],
+      down: grid.column(x)[y+1..]
+    }
+
+    # Reverse the up and left arrays (because we are checking starting from the current cell, so those need to be reversed so that the first element is the nearest tree)
+    adjacent_trees[:left] = adjacent_trees[:left].reverse
+    adjacent_trees[:up] = adjacent_trees[:up].reverse
+
+    directional_scenic_scores = adjacent_trees.values.map do |heights|
+      visible = 0
+
+      if heights.length == 1
+        visible = 1
+      else
+        heights.each do |height|
+          visible += 1
+          break if height >= cell
+        end
+      end
+
+      visible
+    end
+
+    # Multiple the directional scores together to get the ultimate scenic score for this cell.
+    scenic_scores << directional_scenic_scores.reduce(&:*)
+  end
+end
+
+puts "Part 2: #{scenic_scores.max}"
