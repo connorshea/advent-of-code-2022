@@ -1,9 +1,10 @@
 require 'debug'
 
-# lines = File.readlines('day8input.txt')
-lines = File.readlines('day8testinput.txt')
+lines = File.readlines('day8input.txt')
+# lines = File.readlines('day8testinput.txt')
 # Yeet the linebreaks.
 lines.map!(&:strip)
+lines.reject!(&:empty?)
 
 class Grid
   attr_accessor :rows, :width, :height
@@ -47,10 +48,8 @@ class Grid
   end
 
   def column(i)
-    rows.map { |row| row[i] }
+    rows.map { |r| r[i] }
   end
-
-  private
 
   def top_row_index
     0
@@ -73,12 +72,31 @@ grid = Grid.new(lines)
 
 puts grid.inspect
 
+cells_visible_from_outside = 0
+
 # Go through every cell in the grid and determine if the given cell is visible.
 grid.rows.each_with_index do |row, y|
   row.each_with_index do |cell, x|
-    puts "[#{x}, #{y}]: #{cell}"
-    next if grid.cell_on_outside_perimeter?(x, y)
+    if grid.cell_on_outside_perimeter?(x, y)
+      cells_visible_from_outside += 1
+      next
+    end
 
-    
+    adjacent_trees = {
+      left: grid.row(y)[0...x],
+      right: grid.row(y)[x+1..],
+      up: grid.column(x)[0...y],
+      down: grid.column(x)[y+1..]
+    }
+
+    # Check if all the adjacent trees in the row/column of the given cell have
+    # at least one tree in each direction which is larger than the tree we're
+    # inspecting. If they all do, skip ahead. If not, add one to the visible
+    # tree count.
+    next if adjacent_trees.values.map(&:max).all? { |max_height| max_height >= cell }
+
+    cells_visible_from_outside += 1
   end
 end
+
+puts "Part 1: #{cells_visible_from_outside}"
